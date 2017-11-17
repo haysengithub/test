@@ -1,0 +1,106 @@
+    1  gcc
+    2  sudo apt-get update 
+    3  sudo apt-get install git
+    4  git clone https://github.com/UW-Hydro/VIC.git
+    5  ls
+    6  cd VIC
+    7  LS
+    8  ls
+    9  cd vic
+   10  ls
+   11  cd drivers/
+   12  ls
+   13  cd classic/
+   14  ls
+   15  make
+   16  ls
+   17  cd ..
+   18  ls
+   19  cd image/
+   20  make
+   21  cd
+   22  sudo apt-get install mpich
+   23  ls
+   24  cd VIC/
+   25  ls
+   26  cd vic
+   27  cd drivers/
+   28  cd image/
+   29  make
+   30  ls
+   31  cd include/
+   32  ls
+   33  cd ..
+   34  make
+   35  sudo apt-get install netcdf
+   36  sudo apt-get install netcdf-bin 
+   37  make
+   38  sudo apt-get install netcdf-bin 
+   39  sudo apt-get install netcdf-dbg
+   40  sudo apt-get install netcdf-doc
+   41  make
+   42  sudo apt-get install libnetcdf-dev
+   43  make
+   44  ls
+   45  cd ..
+   46  ls
+   47  cd ..
+   48  ls
+   49  cd samples/
+   50  ls
+   51  cd data/
+   52  ls
+   53  cd ..
+   54  ls
+   55  cd notebooks/
+   56  ls
+   57  cd ..
+   58  ./get_sample_data.bash 
+   59  ls
+   60  cd data/
+   61  ls
+   62  cd ..
+   63  cd data/
+   64  git clone  https://github.com/UW-Hydro/VIC_sample_data.git
+   65  ls
+   66  cd VIC_sample_data/
+   67  ls
+   68  cd image/
+   69  ls
+   70  cd Stehekin/
+   71  ls
+   72  cd parameters/
+   73  ls
+   74  pwd
+   75  cp Stehekin_image_test.global.txt  Stehekin_image_test.global.txt.cp
+   76  ls
+   77  nano Stehekin_image_test.global.txt
+   78  pwd
+   79  ls
+   80  cd ..
+   81  ls
+   82  cd forcings/
+   83  ls
+   84  cd ..
+   85  ls
+   86  cd ..
+   87  ls
+   88  cd ..
+   89  ls
+   90  cd image/
+   91  ls
+   92  cd Stehekin/
+   93  ls
+   94  cd parameters/
+   95  ls
+   96  nona Stehekin_image_test.global.txt
+   97  nano Stehekin_image_test.global.txt
+   98  ls
+   99  cd ..
+  100  ls
+  101  cd
+  102  ls
+  103  ssh localhost
+  104  histroy
+  105  history
+  106  history >>1.txt
