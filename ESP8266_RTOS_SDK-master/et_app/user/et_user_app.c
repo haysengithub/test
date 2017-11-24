@@ -13,6 +13,8 @@
 
 #include "esp_common.h"
 
+#include "user_sntp.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
@@ -839,6 +841,8 @@ void  et_user_main(void *pvParameters)
 		os_printf("et_user_main, get_uid error\n");
 		return ;
 	}
+
+	user_sntp_init();
 	
 	id.uid[UID_LEN - 1] = '\0';
 	id.appkey[APPKEY_LEN - 1] = '\0';
