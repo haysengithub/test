@@ -25,7 +25,7 @@ static os_timer_t user_sntp_timer,rtc_test_t;
 
 
 void ICACHE_FLASH_ATTR rtc_count(void *arg)
-{   uint32_t current_stamp;
+{   //uint32_t current_stamp;
     uint32_t time = (uint32_t)arg;
     RTC_TIMER_DEMO rtc_time;
     uint32 rtc_t1;
@@ -49,10 +49,10 @@ void ICACHE_FLASH_ATTR rtc_count(void *arg)
 	rtc_time.time_base = rtc_t1;
     system_rtc_mem_write(64, &rtc_time, sizeof(rtc_time));
 
-    OLED_clear();
+    //OLED_clear();
 	OLED_show_str(0, 0, sntp_get_real_time(time+((rtc_time.time_acc/10000000)/100)), 2);     //such as   :20.08
-	current_stamp = sntp_get_current_timestamp();
-	OLED_show_str(0,4,sntp_get_real_time(current_stamp),2);
+	//current_stamp = sntp_get_current_timestamp();
+	//OLED_show_str(0,4,sntp_get_real_time(current_stamp),2);
     
 }
 
@@ -74,7 +74,8 @@ sntp_timer_cb(void *arg)
         os_timer_disarm(&user_sntp_timer);
         os_timer_disarm(&rtc_test_t);
         os_timer_setfn(&rtc_test_t,rtc_count,(void *)current_stamp);
-        os_timer_arm(&rtc_test_t,60000,1);
+        os_timer_arm(&rtc_test_t,10000,1);
+		OLED_clear();
     }
 #endif
 }
