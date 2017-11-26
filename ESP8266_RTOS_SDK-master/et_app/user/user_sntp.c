@@ -20,32 +20,31 @@ typedef	struct	{
 	uint32	magic	;
 	uint32	time_base;
 }	RTC_TIMER_DEMO;
-
+#if 0
 static os_timer_t user_sntp_timer,rtc_test_t;
 
 
-void ICACHE_FLASH_ATTR rtc_count(void *arg)
+void ICACHE_FLASH_ATTR rtc_count(uint32_t time)
 {   //uint32_t current_stamp;
-    uint32_t time = (uint32_t)arg;
     RTC_TIMER_DEMO rtc_time;
     uint32 rtc_t1;
     uint32 cal1;
-	os_printf("time sntpt : %d \r\n",time);
+	//os_printf("time sntpt : %d \r\n",time);
     system_rtc_mem_read(64, &rtc_time, sizeof(rtc_time));
     if(rtc_time.magic!=RTC_MAGIC)
     {
         rtc_time.magic = RTC_MAGIC;
         rtc_time.time_acc= 0;
         rtc_time.time_base = system_get_rtc_time();
-        os_printf("time base : %d \r\n",rtc_time.time_base);
+        //os_printf("time base : %d \r\n",rtc_time.time_base);
     }
     rtc_t1 = system_get_rtc_time();
     cal1 = system_rtc_clock_cali_proc();
-    os_printf("cal 1 : %d.%d \r\n", ((cal1*1000)>>12)/1000,((cal1*1000)>>12)%1000 );
+    //os_printf("cal 1 : %d.%d \r\n", ((cal1*1000)>>12)/1000,((cal1*1000)>>12)%1000 );
     rtc_time.time_acc += ( ((uint64)(rtc_t1 - rtc_time.time_base)) *( (uint64)((cal1*1000)>>12)) ) ;
-    os_printf("rtc time acc : %lld \r\n",rtc_time.time_acc);
-    os_printf("power on time : %lld.%02lld S \r\n", (rtc_time.time_acc/10000000)/100, (rtc_time.time_acc/10000000)%100);
-    os_printf("time: %s \n", sntp_get_real_time(time+((rtc_time.time_acc/10000000)/100)));
+    //os_printf("rtc time acc : %lld \r\n",rtc_time.time_acc);
+    //os_printf("power on time : %lld.%02lld S \r\n", (rtc_time.time_acc/10000000)/100, (rtc_time.time_acc/10000000)%100);
+    //os_printf("time: %s \n", sntp_get_real_time(time+((rtc_time.time_acc/10000000)/100)));
 	rtc_time.time_base = rtc_t1;
     system_rtc_mem_write(64, &rtc_time, sizeof(rtc_time));
 
@@ -63,8 +62,7 @@ sntp_timer_cb(void *arg)
     uint32 current_stamp;
 #if 1//for sntp test
    /*        
-        需要判断该函数sntp_get_current_timestamp返回值
-        如果该返回值为非0的数表示已经接收到服务器的数据了
+        需要判断该函数sntp_get_current_timestamp返回�?        如果该返回值为�?的数表示已经接收到服务器的数据了
     */
     current_stamp = sntp_get_current_timestamp();
     os_printf("###sntp: %d, %s \n",current_stamp, sntp_get_real_time(current_stamp));
@@ -80,6 +78,68 @@ sntp_timer_cb(void *arg)
 #endif
 }
 
+#endif
+
+
+void user_sntp_task(void *pvParameters)
+{
+    bool sntpGetFlag = FALSE;
+	uint32 current_stamp;
+
+	RTC_TIMER_DEMO rtc_time;
+    uint32 rtc_t1;
+    uint32 cal1;
+	
+	while(1)
+	{
+        if(FALSE==sntpGetFlag)
+        {
+            current_stamp = sntp_get_current_timestamp();
+			if(0==current_stamp)
+		    {
+		        taskYIELD();
+		        continue;
+		    }
+
+			sntpGetFlag =TRUE;
+			OLED_clear();
+		}
+
+		system_rtc_mem_read(64, &rtc_time, sizeof(rtc_time));
+	    if(rtc_time.magic!=RTC_MAGIC)
+	    {
+	        rtc_time.magic = RTC_MAGIC;
+	        rtc_time.time_acc= 0;
+	        rtc_time.time_base = system_get_rtc_time();
+	        //os_printf("time base : %d \r\n",rtc_time.time_base);
+	    }
+	    rtc_t1 = system_get_rtc_time();
+	    cal1 = system_rtc_clock_cali_proc();
+	    //os_printf("cal 1 : %d.%d \r\n", ((cal1*1000)>>12)/1000,((cal1*1000)>>12)%1000 );
+	    rtc_time.time_acc += ( ((uint64)(rtc_t1 - rtc_time.time_base)) *( (uint64)((cal1*1000)>>12)) ) ;
+	    //os_printf("rtc time acc : %lld \r\n",rtc_time.time_acc);
+	    //os_printf("power on time : %lld.%02lld S \r\n", (rtc_time.time_acc/10000000)/100, (rtc_time.time_acc/10000000)%100);
+	    os_printf("time: %s \n", sntp_get_real_time(current_stamp+((rtc_time.time_acc/10000000)/100)));
+		rtc_time.time_base = rtc_t1;
+	    system_rtc_mem_write(64, &rtc_time, sizeof(rtc_time));
+
+	    OLED_clear();
+		OLED_show_str(0, 0, sntp_get_real_time(current_stamp+((rtc_time.time_acc/10000000)/100)), 2);     //such as   :20.08
+		//current_stamp = sntp_get_current_timestamp();
+		//OLED_show_str(0,4,sntp_get_real_time(current_stamp),2);
+
+		
+        vTaskDelay(5000 / portTICK_RATE_MS);
+		
+	
+		//taskYIELD();
+	}
+	
+	vTaskDelete(NULL);	
+}
+
+
+
 void ICACHE_FLASH_ATTR
 user_sntp_init(void)
 {
@@ -93,7 +153,12 @@ user_sntp_init(void)
     sntp_init();
 
     // ��ʱ����ʼ��
-    os_timer_disarm(&user_sntp_timer);
-    os_timer_setfn(&user_sntp_timer, sntp_timer_cb , NULL);
-    os_timer_arm(&user_sntp_timer, SNTP_READ_INTERVAL, 1);
+    //os_timer_disarm(&user_sntp_timer);
+    //os_timer_setfn(&user_sntp_timer, sntp_timer_cb , NULL);
+    //os_timer_arm(&user_sntp_timer, SNTP_READ_INTERVAL, 1);
+
+	if(pdPASS != xTaskCreate(user_sntp_task, "sntp_task", 512, NULL, 2, NULL))
+	{
+		os_printf("%s user_sntp_init failed.\n", __FUNCTION__);
+	}
 }
