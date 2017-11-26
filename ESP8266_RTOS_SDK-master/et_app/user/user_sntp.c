@@ -6,6 +6,7 @@
  */
 
 #include "esp_common.h"
+#include "user_ntputc.h"
 
 
 //#include "ets_sys.h"
@@ -124,9 +125,20 @@ void user_sntp_task(void *pvParameters)
 	    system_rtc_mem_write(64, &rtc_time, sizeof(rtc_time));
 
 	    OLED_clear();
-		OLED_show_str(0, 0, sntp_get_real_time(current_stamp+((rtc_time.time_acc/10000000)/100)), 2);     //such as   :20.08
+		//OLED_show_str(0, 0, sntp_get_real_time(current_stamp+((rtc_time.time_acc/10000000)/100)), 2);     //such as   :20.08
 		//current_stamp = sntp_get_current_timestamp();
 		//OLED_show_str(0,4,sntp_get_real_time(current_stamp),2);
+
+        //os_printf("time base : %d \r\n",current_stamp+(uint32)((rtc_time.time_acc/10000000)/100));
+		NTP_GMTconvert(current_stamp+(uint32)((rtc_time.time_acc/10000000)/100));
+
+		unsigned char display_temp[24]={0};
+		//2017-11-26 23:08:12 7
+		sprintf(display_temp, "%d-%d-%d %d:%d:%d %d", 
+			NTP_my_time.NTP_nYear,NTP_my_time.NTP_nMonth,NTP_my_time.NTP_nDay,
+			NTP_my_time.NTP_nHour,NTP_my_time.NTP_nMin,NTP_my_time.NTP_nSec,
+			NTP_my_time.NTP_DayIndex);
+		OLED_show_str(0,0,display_temp,2);
 
 		
         vTaskDelay(5000 / portTICK_RATE_MS);
