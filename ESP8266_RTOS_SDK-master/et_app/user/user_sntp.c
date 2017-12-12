@@ -6,6 +6,8 @@
  */
 
 #include "esp_common.h"
+#include "et_types.h"
+#include "user_config.h"
 #include "user_ntputc.h"
 
 
@@ -90,6 +92,8 @@ void user_sntp_task(void *pvParameters)
 	RTC_TIMER_DEMO rtc_time;
     uint32 rtc_t1;
     uint32 cal1;
+
+	unsigned char saveHour =0;
 	
 	while(1)
 	{
@@ -102,8 +106,10 @@ void user_sntp_task(void *pvParameters)
 		        continue;
 		    }
 
+			//os_printf("time: %d \n",current_stamp);
+
 			sntpGetFlag =TRUE;
-			OLED_clear();
+			rtc_time.time_acc= 0;
 		}
 
 		system_rtc_mem_read(64, &rtc_time, sizeof(rtc_time));
@@ -120,11 +126,11 @@ void user_sntp_task(void *pvParameters)
 	    rtc_time.time_acc += ( ((uint64)(rtc_t1 - rtc_time.time_base)) *( (uint64)((cal1*1000)>>12)) ) ;
 	    //os_printf("rtc time acc : %lld \r\n",rtc_time.time_acc);
 	    //os_printf("power on time : %lld.%02lld S \r\n", (rtc_time.time_acc/10000000)/100, (rtc_time.time_acc/10000000)%100);
-	    os_printf("time: %s \n", sntp_get_real_time(current_stamp+((rtc_time.time_acc/10000000)/100)));
+	    //os_printf("time: %s \n", sntp_get_real_time(current_stamp+((rtc_time.time_acc/10000000)/100)));
 		rtc_time.time_base = rtc_t1;
 	    system_rtc_mem_write(64, &rtc_time, sizeof(rtc_time));
 
-	    OLED_clear();
+	    
 		//OLED_show_str(0, 0, sntp_get_real_time(current_stamp+((rtc_time.time_acc/10000000)/100)), 2);     //such as   :20.08
 		//current_stamp = sntp_get_current_timestamp();
 		//OLED_show_str(0,4,sntp_get_real_time(current_stamp),2);
@@ -132,18 +138,74 @@ void user_sntp_task(void *pvParameters)
         //os_printf("time base : %d \r\n",current_stamp+(uint32)((rtc_time.time_acc/10000000)/100));
 		NTP_GMTconvert(current_stamp+(uint32)((rtc_time.time_acc/10000000)/100));
 
-		unsigned char display_temp[24]={0};
+		/*unsigned char display_temp[24]={0};
 		//2017-11-26 23:08:12 7
 		sprintf(display_temp, "%d-%d-%d %d:%d:%d %d", 
 			NTP_my_time.NTP_nYear,NTP_my_time.NTP_nMonth,NTP_my_time.NTP_nDay,
 			NTP_my_time.NTP_nHour,NTP_my_time.NTP_nMin,NTP_my_time.NTP_nSec,
 			NTP_my_time.NTP_DayIndex);
+		OLED_show_str(0,0,display_temp,2);*/
+
+		////if(saveHour != NTP_my_time.NTP_nMin)
+		////{
+		////	saveHour = NTP_my_time.NTP_nMin;
+		////	sntpGetFlag =FALSE;
+		////}
+		
+        vTaskDelay(20000 / portTICK_RATE_MS);
+			
+		//taskYIELD();
+	}
+	
+	vTaskDelete(NULL);	
+}
+
+
+
+
+
+void user_display_task(void *pvParameters)
+{
+    
+	
+	while(1)
+	{
+	    et_uchar display_temp[24]={0};
+		//2017-11-26 23:08:12 7
+		sprintf(display_temp, "%d-%d-%d", 
+			NTP_my_time.NTP_nYear,NTP_my_time.NTP_nMonth,NTP_my_time.NTP_nDay);
 		OLED_show_str(0,0,display_temp,2);
 
+		sprintf(display_temp, "%d:%d:%d %d", 
+			NTP_my_time.NTP_nHour,NTP_my_time.NTP_nMin,NTP_my_time.NTP_nSec,
+			NTP_my_time.NTP_DayIndex);
+		OLED_show_str(0,2,display_temp,2);
 		
-        vTaskDelay(5000 / portTICK_RATE_MS);
-		
-	
+
+		et_uchar temp_hum[HUM_DATA_SIZE]={0};
+
+		if(DHT11_read_temp_hum(temp_hum, HUM_DATA_SIZE) == RETURN_OK) 
+		{
+
+			et_uchar display_temp[7]={0};
+			et_uchar display_hum[8]={0};
+			sprintf(display_temp, ":%d.%d", temp_hum[2], temp_hum[3]);
+			sprintf(display_hum, ":%d.%d%%", temp_hum[0], temp_hum[1]);
+			//OLED_show_chn(0, 0, 15);    //show §³e:
+			//OLED_show_str(18, 0, "e:", 2);
+			OLED_show_chn(0, 4, 0); //??
+			OLED_show_chn(18, 4, 1); //??
+			OLED_show_str(36, 4, display_temp, 2);     //such as   :20.08
+			OLED_show_chn(86, 4, 2);  //??
+
+			OLED_show_chn(0, 6, 3);    //?
+			OLED_show_chn(18, 6, 4);  //??
+			OLED_show_str(36, 6, display_hum, 2);//such as :80.05%
+		}
+						
+  		
+        vTaskDelay(10000 / portTICK_RATE_MS);
+			
 		//taskYIELD();
 	}
 	
@@ -173,4 +235,13 @@ user_sntp_init(void)
 	{
 		os_printf("%s user_sntp_init failed.\n", __FUNCTION__);
 	}
+
+	OLED_clear();
+
+	if(pdPASS != xTaskCreate(user_display_task, "display_task", 512, NULL, 2, NULL))
+	{
+		os_printf("%s user_sntp_init failed2.\n", __FUNCTION__);
+	}
+
+	
 }
