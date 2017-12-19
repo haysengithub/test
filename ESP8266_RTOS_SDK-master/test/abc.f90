@@ -10,7 +10,7 @@ program read
 
 !!!!===============test nc read file=====================
      !status=nf_open('/home/liudi/fortran_test/SM_SCIE_MIR_CLF4DA_20101223T000000_20101223T235959_300_001_9.DBL.nc', nf_write, ncid)
-     status=nf_open('/home/lincystar/nf90/SM_SCIE_MIR_CLF4DA_20101223T000000_20101223T235959_300_001_9.DBL.nc', nf_write, ncid)
+     status=nc_open('/home/lincystar/nf90/SM_SCIE_MIR_CLF4DA_20101223T000000_20101223T235959_300_001_9.DBL.nc', NC_WRITE, ncid)
 	 
      
      status=nf_close(ncid)
