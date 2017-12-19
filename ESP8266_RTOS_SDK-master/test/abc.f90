@@ -1,6 +1,6 @@
 program read
      implicit none 
-     include '/usr/local/netcdf/include/netcdf'
+     include '/usr/local/netcdf/include/netcdf.inc'
 
      integer  ::  i,j,ncid,status
      integer  ::  ANOMid
